@@ -1,5 +1,6 @@
 ##Imports
 import argparse
+import time
 
 ##Conditional import for older versions of python not compatible with subprocess
 ##Set compatmode = 0 if new, 0 if old
@@ -80,7 +81,7 @@ def webRecon(result, host, outfile, wordlist="/usr/share/wordlists/dirb/small.tx
     results = []
     
     if 'https' in result:
-        cmdDirb = {"DIRB":{"cmd":"dirb " + "https://" +"%s %s -S -w >> %s.dirb" % (args.host, wordlist, args.host),
+        cmdDirb = {"DIRB":{"cmd":"dirb " + "https://" +"%s %s -S -w >> %s.dirb" % (host, wordlist, outfile),
                     "msg":"Dirb Scan", "results":results}}
         print(cmdDirb["DIRB"]["cmd"])
         cmdDirb = execCmd(cmdDirb)
@@ -93,11 +94,11 @@ def webRecon(result, host, outfile, wordlist="/usr/share/wordlists/dirb/small.tx
         cmdDirb = execCmd(cmdDirb)
         printResults(cmdDirb)
 
-    cmdNmapWeb = {"NMAP Web":{"cmd":"nmap -sV -Pn -vv -p %s --script='(http* or ssl*) and not (broadcast or dos or external or http-slowloris* or fuzzer)' %s >> %s_webnmap"
+    cmdNmapScript = {"NMAP Script":{"cmd":"nmap -sV -Pn -vv --host-timeout 10m -p %s --script='(http* or ssl*) and not (broadcast or dos or external or http-slowloris* or fuzzer)' %s >> %s_web_nmap"
                     % (result.split("/")[0], host, outfile),"msg":"NMAP Web Scripts","results":results}}
-    print(cmdNmapWeb["NMAP Web"]["cmd"])
-    cmdNmapWeb = execCmd(cmdNmapWeb)
-    printResults(cmdNmapWeb)
+    print(cmdNmapScript["NMAP Script"]["cmd"])
+    cmdNmapScript = execCmd(cmdNmapScript)
+    printResults(cmdNmapScripts)
 
     cmdNikto = {"NIKTO":{"cmd":"nikto -F csv -o '%s_nikto.csv' -h '%s'" % (outfile, host), 
                 "msg":"Nikto Web Vulnerability Scan", "results":results}}
@@ -105,16 +106,34 @@ def webRecon(result, host, outfile, wordlist="/usr/share/wordlists/dirb/small.tx
     printResults(cmdNikto)
 
 ##/
+#SMB Recon
+##
+def smbRecon(result, host, outfile):
+    results = []
+
+    cmdNmapScript = {"NMAP Script":{"cmd":"nmap -sV -Pn -vv -p %s --script='(smb*) and not (brute or broadcast or dos or external or fuzzer)' --script-args=unsafe=1 %s >> %s_smb_nmap"
+                    % (result.split("/")[0], host, outfile),"msg":"NMAP SMB Scripts","results":results}}
+    print(cmdNmapScript["NMAP Script"]["cmd"])
+    cmdNmapScript = execCmd(cmdNmapScript)
+    printResults(cmdNmapScript)
+
+##/
 # Main
 ##
+
+#Start the clock
+start_time = time.time()
+
+#Declarations
 args = initArgParser()
 results = []						#results array	
+
 #parse args
 if args.debug:        					#debug mode
     for k in args.__dict__:
         if args.__dict__[k] is not None:
             print (args.__dict__[k])
-    print ("Compatibility Mode: " + str(compatmode))
+    print ("Compatibility Mode: " + str(co1mpatmode))
 
 if args.nmap:
     ##cmdNmap = {"SCAN":{"cmd":"nmap -vv -Pn -A -sC -sV -T4 -p- -oN '%s.nmap' -oX '%s.xml' %s" 		##full for PROD	
@@ -126,8 +145,13 @@ if args.nmap:
     tcpServices = getTCP(cmdNmap["SCAN"]["results"])
     if tcpServices:
         for result in tcpServices:
-            if 'http' or 'https' in result:
-                webRecon(result, args.host, args.outfile)    
+            print(result)
+            #if 'http' or 'https' in result:
+                #webRecon(result, args.host, args.outfile)
+            if '139' in result:
+                smbRecon(result, args.host, args.outfile)
+            if '445' in result:
+                smbRecon(result, args.host, args.outfile)
     else:
         print ("No open exploitable services found.")
         
@@ -165,4 +189,5 @@ if args.dirb:
     cmdDirb = execCmd(cmdDirb)
     printResults(cmdDirb)
 
-    
+#stop the clock and print elapsed time
+print ("%s seconds elapsed" % (time.time() - start_time))
