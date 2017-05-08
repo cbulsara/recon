@@ -81,20 +81,20 @@ def webRecon(result, host, outfile, wordlist="/usr/share/wordlists/dirb/small.tx
     results = []
     
     if 'https' in result:
-        cmdDirb = {"DIRB":{"cmd":"dirb " + "https://" +"%s %s -S -w >> %s.dirb" % (host, wordlist, outfile),
-                    "msg":"Dirb Scan", "results":results}}
-        print(cmdDirb["DIRB"]["cmd"])
-        cmdDirb = execCmd(cmdDirb)
+        cmdDirb = {"DIRB":{"cmd":"dirb " + "https://" +"%s %s -S -w >> %s_https.dirb" % (host, wordlist, outfile),
+                    "msg":"Dirb Scan", "results":resulhttps}}
+        print(cmdDirb["DIRB"]["cmhttps"])
+        cmdDirb = execCmd(cmdDhttps)
         printResults(cmdDirb)    
 
     else:
-        cmdDirb = {"DIRB":{"cmd":"dirb " + "http://" +"%s %s -S -w >> %s.dirb" % (args.host, wordlist, args.host),
+        cmdDirb = {"DIRB":{"cmd":"dirb " + "http://" +"%s %s -S -w >> %s_http.dirb" % (args.host, wordlist, args.host),
                     "msg":"Dirb Scan", "results":results}}
         print(cmdDirb["DIRB"]["cmd"])
         cmdDirb = execCmd(cmdDirb)
         printResults(cmdDirb)
 
-    cmdNmapScript = {"NMAP Script":{"cmd":"nmap -sV -Pn -vv --host-timeout 10m -p %s --script='(http* or ssl*) and not (broadcast or dos or external or http-slowloris* or fuzzer)' %s >> %s_web_nmap"
+    cmdNmapScript = {"NMAP Script":{"cmd":"nmap -sV -Pn -vv --host-timeout 10m -p %s --script='(http* or ssl*) and not (broadcast or dos or external or http-slowloris* or fuzzer)' %s >> %s_web.nmap"
                     % (result.split("/")[0], host, outfile),"msg":"NMAP Web Scripts","results":results}}
     print(cmdNmapScript["NMAP Script"]["cmd"])
     cmdNmapScript = execCmd(cmdNmapScript)
@@ -111,7 +111,7 @@ def webRecon(result, host, outfile, wordlist="/usr/share/wordlists/dirb/small.tx
 def smbRecon(result, host, outfile):
     results = []
 
-    cmdNmapScript = {"NMAP Script":{"cmd":"nmap -sV -Pn -vv -p %s --script='(smb*) and not (brute or broadcast or dos or external or fuzzer)' --script-args=unsafe=1 %s >> %s_smb_nmap"
+    cmdNmapScript = {"NMAP Script":{"cmd":"nmap -sV -Pn -vv -p %s --script='(smb*) and not (brute or broadcast or dos or external or fuzzer)' --script-args=unsafe=1 %s >> %s_smb.nmap"
                     % (result.split("/")[0], host, outfile),"msg":"NMAP SMB Scripts","results":results}}
     print(cmdNmapScript["NMAP Script"]["cmd"])
     cmdNmapScript = execCmd(cmdNmapScript)
